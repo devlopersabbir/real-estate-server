@@ -1,0 +1,38 @@
+services:
+  server:
+    image: softvence/juan-server:latest
+    container_name: juan-server
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:${PORT}"
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    networks:
+      - juan-network
+  database:
+    image: postgres:15
+    container_name: juan-database
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:${DB_PORT}"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      - juan-database:/var/lib/postgresql/data
+    networks:
+      - juan-network
+
+networks:
+  juan-network:
+    driver: bridge
+  volumes:
+    juan-database:
