@@ -1,11 +1,11 @@
 package types
 
-type Database struct {
-	DBHost string
-	DBUser string
-	DBPass string
-	DBName string
-	DBPort string
+type DatabaseConfig struct {
+	DBHost string `validate:"required"`
+	DBUser string `validate:"required"`
+	DBPass string `validate:"required"`
+	DBName string `validate:"required"`
+	DBPort int    `validate:"required"`
 }
 type ServerConfig struct {
 	Port int    `validate:"required,gte=5000,lte=9000"` // port need to be within 5000 to 9000
@@ -17,6 +17,6 @@ type CORSConfig struct {
 	AllowMethods []string
 }
 type Env struct {
-	Database     Database
-	ServerConfig ServerConfig
+	DatabaseConfig DatabaseConfig
+	ServerConfig   ServerConfig
 }

@@ -16,6 +16,13 @@ func LoadEnv() (*types.Env, error) {
 			Port: GetEnv("PORT", 5000),
 			Host: GetEnv("HOST", "0.0.0.0"),
 		},
+		DatabaseConfig: types.DatabaseConfig{
+			DBHost: GetEnv("DB_HOST", "localhost"),
+			DBPort: GetEnv("DB_PORT", 5432),
+			DBUser: GetEnv("DB_USER", "postgres"),
+			DBPass: GetEnv("DB_PASSWORD", "postgres"),
+			DBName: GetEnv("DB_NAME", "juan"),
+		},
 	}
 	if err != nil {
 		return nil, err
