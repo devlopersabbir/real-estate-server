@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/devlopersabbir/juan_don82-server/api/users/core"
@@ -13,6 +14,12 @@ import (
 
 func StoreElastic(ctx context.Context, user *core.Users) error {
 	index := elastic.UsersIndex.Name
+	if exists, err := database.ESClient.Exists(index, strconv.Itoa(int(user.ID))).IsSuccess(ctx); exists {
+		log.Println("User already exists in ES")
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("failed to check if user exists in ES: %w", err)
+	}
 	_, err := database.ESClient.Index(index).
 		Id(strconv.Itoa(int(user.ID))).
 		Request(user).
@@ -21,7 +28,6 @@ func StoreElastic(ctx context.Context, user *core.Users) error {
 	if err != nil {
 		return fmt.Errorf("failed to store user in ES: %w", err)
 	}
-
 	return nil
 }
 
