@@ -1,0 +1,68 @@
+package users
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strconv"
+
+	"github.com/devlopersabbir/juan_don82-server/api/users/core"
+	"github.com/devlopersabbir/juan_don82-server/arch/elastic"
+	"github.com/devlopersabbir/juan_don82-server/internal/database"
+)
+
+func StoreElastic(ctx context.Context, user *core.Users) error {
+	index := elastic.UsersIndex.Name
+	_, err := database.ESClient.Index(index).
+		Id(strconv.Itoa(int(user.ID))).
+		Request(user).
+		Do(ctx)
+
+	if err != nil {
+		return fmt.Errorf("failed to store user in ES: %w", err)
+	}
+
+	return nil
+}
+
+func FetchElastic(ctx context.Context, id string) (*core.Users, error) {
+	index := elastic.UsersIndex.Name
+	res, err := database.ESClient.Get(index, id).Do(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch user from ES: %w", err)
+	}
+
+	if !res.Found {
+		return nil, fmt.Errorf("user not found in ES: %s", id)
+	}
+
+	var user core.Users
+	if err := json.Unmarshal(res.Source_, &user); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal user from ES: %w", err)
+	}
+
+	return &user, nil
+}
+
+func UpdateElastic(ctx context.Context, id string, user *core.Users) error {
+	index := elastic.UsersIndex.Name
+	_, err := database.ESClient.Update(index, id).
+		Doc(user).
+		Do(ctx)
+
+	if err != nil {
+		return fmt.Errorf("failed to update user in ES: %w", err)
+	}
+
+	return nil
+}
+
+func DeleteElastic(ctx context.Context, id string) error {
+	index := elastic.UsersIndex.Name
+	_, err := database.ESClient.Delete(index, id).Do(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to delete user from ES: %w", err)
+	}
+
+	return nil
+}

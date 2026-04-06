@@ -4,29 +4,36 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/devlopersabbir/juan_don82-server/internal/pkg/types"
 	"github.com/joho/godotenv"
 )
 
-func LoadEnv() (*types.Env, error) {
-	err := godotenv.Load()
+func LoadEnv() (*Env, error) {
+	_ = godotenv.Load()
 
-	env := &types.Env{
-		ServerConfig: types.ServerConfig{
-			Port: GetEnv("PORT", 5000),
+	env := &Env{
+		ServerConfig: ServerConfig{
+			Port: GetEnv("PORT", 9000),
 			Host: GetEnv("HOST", "0.0.0.0"),
 		},
-		DatabaseConfig: types.DatabaseConfig{
-			DBHost: GetEnv("DB_HOST", "localhost"),
-			DBPort: GetEnv("DB_PORT", 5432),
-			DBUser: GetEnv("DB_USER", "postgres"),
-			DBPass: GetEnv("DB_PASSWORD", "postgres"),
-			DBName: GetEnv("DB_NAME", "juan"),
+		DatabaseConfig: DatabaseConfig{
+			DBHost:    GetEnv("DB_HOST", "localhost"),
+			DBPort:    GetEnv("DB_PORT", 5431),
+			DBUser:    GetEnv("DB_USER", "postgres"),
+			DBPass:    GetEnv("DB_PASSWORD", "postgres"),
+			DBName:    GetEnv("DB_NAME", "juan"),
+			DBSSLMode: GetEnv("DB_SSL_MODE", "disable"),
+		},
+		ElasticConfig: ElasticConfig{
+			ESAddresses: []string{GetEnv("ES_ADDRESSES", "http://localhost:9200")},
+			ESUsername:  GetEnv("ES_USERNAME", "elastic"),
+			ESPassword:  GetEnv("ES_PASSWORD", "elastic"),
+		},
+		JWTConfig: JWTConfig{
+			Secret:        GetEnv("JWT_SECRET", "supersecretkey"),
+			RefreshSecret: GetEnv("JWT_REFRESH_SECRET", "superrefreshsecretkey"),
 		},
 	}
-	if err != nil {
-		return nil, err
-	}
+
 	return env, nil
 }
 
