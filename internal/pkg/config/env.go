@@ -28,8 +28,10 @@ type JWTConfig struct {
 }
 
 type Env struct {
-	DatabaseConfig DatabaseConfig
-	ServerConfig   ServerConfig
-	ElasticConfig  ElasticConfig
-	JWTConfig      JWTConfig
+	DatabaseConfig     DatabaseConfig
+	ServerConfig       ServerConfig
+	ElasticConfig      ElasticConfig
+	JWTConfig          JWTConfig
+	JWT_SECRET         string
+	JWT_REFRESH_SECRET string
 }

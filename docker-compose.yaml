@@ -20,9 +20,9 @@ services:
     networks:
       - juan-network
   database:
-    image: postgres:15
+    image: postgres:latest
     container_name: juan-database
-    restart: unless-stopped
+    restart: always
     profiles:
       - dev
       - prod
@@ -34,8 +34,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
       - POSTGRES_DB=${DB_NAME:-juan}
     volumes:
-      - juan_db:/var/lib/postgresql/data
-      - ./.backup/postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     networks:
       - juan-network
   elasticsearch:
@@ -55,7 +54,6 @@ services:
       - "9200:9200"
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
-      - ./.backup/elastic-data:/usr/share/elasticsearch/data
     healthcheck:
       test:
         [
@@ -73,5 +71,5 @@ networks:
   juan-network:
     driver: bridge
 volumes:
-  juan_db:
+  postgres_data:
   elasticsearch:

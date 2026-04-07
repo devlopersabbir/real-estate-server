@@ -1,0 +1,235 @@
+basePath: /
+definitions:
+  github_com_devlopersabbir_juan_don82-server_api_users_domain.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  github_com_devlopersabbir_juan_don82-server_api_users_domain.CreateUserRequest:
+    properties:
+      email:
+        maxLength: 255
+        minLength: 3
+        type: string
+      name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      password:
+        maxLength: 255
+        minLength: 3
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  github_com_devlopersabbir_juan_don82-server_api_users_domain.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_devlopersabbir_juan_don82-server_api_users_domain.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+host: localhost:9000
+info:
+  contact: {}
+  description: Modern REST API for Juan Don project
+  title: Juan Don API
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns access and refresh
+      parameters:
+      - description: Login Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_users_domain.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tokens
+          schema:
+            $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_users_domain.AuthResponse'
+      summary: Log in a user
+      tags:
+      - Authentication
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Provides a new access token using a refresh token
+      parameters:
+      - description: Refresh Token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_users_domain.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New tokens
+          schema:
+            $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_users_domain.AuthResponse'
+      summary: Refresh authentication token
+      tags:
+      - Authentication
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user with name, email, and password
+      parameters:
+      - description: User Registration Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_users_domain.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - Authentication
+  /api/v1/properties:
+    get:
+      description: Fetches a list of all properties
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of properties
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all properties
+      tags:
+      - Properties
+    post:
+      consumes:
+      - application/json
+      description: Creates a new property
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Property created successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a property
+      tags:
+      - Properties
+  /api/v1/properties/{id}:
+    delete:
+      description: Deletes a property by its ID
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Property deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a property
+      tags:
+      - Properties
+    get:
+      description: Fetches a single property by its ID
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Property details
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a property
+      tags:
+      - Properties
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing property by its ID
+      parameters:
+      - description: Property ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Property updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a property
+      tags:
+      - Properties
+  /api/v1/users:
+    get:
+      description: Fetches a list of all users. Requires authentication.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users fetched successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

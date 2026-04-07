@@ -39,10 +39,10 @@ func createIndex(es *elasticsearch.TypedClient, idx elastic.IndexDefinition) {
 	// Since idx.Mapping is map[string]any, we can't easily use the fully typed CreateIndexRequest
 	// unless we want to rebuild it. But we can use the low-level body if needed,
 	// or just use the Typed API with a raw request body.
-	
+
 	// Actually, the Typed API for CreateIndex allows setting the body.
 	mappingJSON, _ := json.Marshal(idx.Mapping)
-	
+
 	_, err = es.Indices.Create(idx.Name).
 		Raw(bytes.NewReader(mappingJSON)).
 		Do(context.Background())

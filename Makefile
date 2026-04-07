@@ -23,3 +23,12 @@ deps:
 	go mod tidy
 dev:
 	air
+
+swagger:
+	@echo "Generating Swagger docs..."
+	$(shell go env GOPATH)/bin/swag fmt
+	$(shell go env GOPATH)/bin/swag init \
+	-g startup/server.go \
+	-d ./ \
+	--parseDependency \
+	--parseInternal

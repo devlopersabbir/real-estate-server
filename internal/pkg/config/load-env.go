@@ -11,6 +11,8 @@ func LoadEnv() (*Env, error) {
 	_ = godotenv.Load()
 
 	env := &Env{
+		JWT_SECRET:         GetEnv("JWT_SECRET", "supersecretkey"),
+		JWT_REFRESH_SECRET: GetEnv("JWT_REFRESH_SECRET", "superrefreshsecretkey"),
 		ServerConfig: ServerConfig{
 			Port: GetEnv("PORT", 9000),
 			Host: GetEnv("HOST", "0.0.0.0"),

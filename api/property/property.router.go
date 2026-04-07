@@ -8,7 +8,7 @@ import (
 // Expected base group: /api/v1
 func RegisterRoutes(v1 *gin.RouterGroup) {
 	// /api/v1/properties
-	properties := v1.Group("/properties")
+	properties := v1.Group("/v1/properties")
 	{
 		properties.GET("/", GetProperties)
 		properties.GET("/:id", GetProperty)

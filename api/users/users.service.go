@@ -1,38 +1,45 @@
 package users
 
 import (
-	"net/http"
-
 	"github.com/devlopersabbir/juan_don82-server/api/users/core"
 	"github.com/devlopersabbir/juan_don82-server/api/users/domain"
+	"github.com/devlopersabbir/juan_don82-server/arch/networks"
+	"github.com/devlopersabbir/juan_don82-server/internal/pkg/config"
 	cf "github.com/devlopersabbir/juan_don82-server/internal/pkg/config"
 	"github.com/devlopersabbir/juan_don82-server/internal/pkg/utils"
 	v "github.com/devlopersabbir/juan_don82-server/internal/pkg/validator"
 	"github.com/gin-gonic/gin"
 )
 
+// CreateUser handles user registration
+//
+//	@Summary		Register a new user
+//	@Description	Creates a new user with name, email, and password
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		domain.CreateUserRequest	true	"User Registration Details"
+//	@Success		201		{object}	map[string]string			"User created successfully"
+//	@Router			/api/v1/auth/register [post]
 func CreateUser(c *gin.Context) {
 	var body domain.CreateUserRequest
+	res := networks.Send(c)
 
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid request body",
-		})
+		res.BadRequestError("Invalid request body", err)
 		return
 	}
 
 	// Validate struct fields
 	if errs := v.Validate(body); errs != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"errors": errs,
-		})
+		res.ValidationError("Validation failed", errs)
 		return
 	}
 
 	// Hash password
 	hashedPassword, err := utils.HashPassword(body.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		res.InternalServerError("Failed to hash password", err)
 		return
 	}
 
@@ -45,95 +52,118 @@ func CreateUser(c *gin.Context) {
 
 	// Store pg database
 	if err := Store(user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		res.InternalServerError("Failed to create user", err)
 		return
 	}
 	// Store elastic database
 	if err := StoreElastic(c, user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		res.InternalServerError("Failed to create user in search index", err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "User created successfully",
-	})
+	res.SuccessMsgResponse("User created successfully")
 }
 
+// LoginUser handles user login
+//
+//	@Summary		Log in a user
+//	@Description	Authenticates a user and returns access and refresh
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		domain.LoginRequest	true	"Login Credentials"
+//	@Success		200		{object}	domain.AuthResponse	"Tokens"
+//	@Router			/api/v1/auth/login [post]
 func LoginUser(c *gin.Context) {
 	var body domain.LoginRequest
+	res := networks.Send(c)
 
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		res.BadRequestError("Invalid request body", err)
 		return
 	}
 
 	if errs := v.Validate(body); errs != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errs})
+		res.ValidationError("Validation failed", errs)
 		return
 	}
 
 	user, err := FindByEmail(body.Email)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+	if err != nil || user.Email == "" {
+		res.UnauthorizedError("Invalid credentials", err)
 		return
 	}
 
 	if !utils.CheckPasswordHash(body.Password, user.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		res.UnauthorizedError("Incorrect password", nil)
 		return
 	}
 
-	secret := cf.GetEnv("JWT_SECRET", "supersecretkey")
-	refreshSecret := cf.GetEnv("JWT_REFRESH_SECRET", "superrefreshsecretkey")
-
-	accessToken, refreshToken, err := utils.GenerateTokens(user.ID, user.Email, user.Role, secret, refreshSecret)
+	env, _ := config.LoadEnv()
+	accessToken, refreshToken, err := utils.GenerateTokens(user.ID, user.Email, user.Role, env.JWTConfig.Secret, env.JWTConfig.RefreshSecret)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
+		res.InternalServerError("Failed to generate tokens", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.AuthResponse{
+	res.SuccessDataResponse("Login successful", domain.AuthResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	})
 }
 
+// GetUsers fetches all users
+//
+//	@Summary		Get all users
+//	@Description	Fetches a list of all users. Requires authentication.
+//	@Tags			Users
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{object}	map[string]string	"Users fetched successfully"
+//	@Router			/api/v1/users [get]
 func GetUsers(c *gin.Context) {
 	// We can implement fetching all users if needed
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Users fetched successfully",
-	})
+	networks.Send(c).SuccessMsgResponse("Users fetched successfully")
 }
 
+// RefreshUserToken refreshes the access token
+//
+//	@Summary		Refresh authentication token
+//	@Description	Provides a new access token using a refresh token
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		domain.RefreshRequest	true	"Refresh Token"
+//	@Success		200		{object}	domain.AuthResponse		"New tokens"
+//	@Router			/api/v1/auth/refresh [post]
 func RefreshUserToken(c *gin.Context) {
 	var body domain.RefreshRequest
+	res := networks.Send(c)
 
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		res.BadRequestError("Invalid request body", err)
 		return
 	}
 
 	if errs := v.Validate(body); errs != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"errors": errs})
+		res.ValidationError("Validation failed", errs)
 		return
 	}
 
-	refreshSecret := cf.GetEnv("JWT_REFRESH_SECRET", "superrefreshsecretkey")
+	refreshSecret := cf.GetEnv("JWT_REFRESH_SECRET", "2348ffhhjdsghjvxbvmnb23424728rfhsjfkasjfklasj")
 	claims, err := utils.VerifyToken(body.RefreshToken, refreshSecret)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+		res.UnauthorizedError("Invalid refresh token", err)
 		return
 	}
 
-	secret := cf.GetEnv("JWT_SECRET", "supersecretkey")
-
-	accessToken, refreshToken, err := utils.GenerateTokens(claims.UserID, claims.Email, claims.Role, secret, refreshSecret)
+	accessToken, refreshToken, err := utils.GenerateTokens(claims.UserID, claims.Email, claims.Role, cf.GetEnv("JWT_SECRET", "supersfsdfasfsecretkey"), cf.GetEnv("JWT_REFRESH_SECRET", "2348ffhhjdsghjvxbvmnb23424728rfhsjfkasjfklasj"))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
+		res.InternalServerError("Failed to generate tokens", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, domain.AuthResponse{
+	res.SuccessDataResponse("Token refreshed successfully", domain.AuthResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	})

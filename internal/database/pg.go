@@ -8,15 +8,15 @@ import (
 	"github.com/devlopersabbir/juan_don82-server/internal/pkg/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
 
 func OpenConnection(env *config.Env) {
 	dsn := generateConnectionString(env)
-	fmt.Println("dsn", dsn)
 	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		log.Fatalf("Couldn't establish database connection: %s", err)
 	}
