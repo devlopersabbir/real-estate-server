@@ -5,7 +5,6 @@ import (
 	"github.com/devlopersabbir/juan_don82-server/api/users/domain"
 	"github.com/devlopersabbir/juan_don82-server/arch/networks"
 	"github.com/devlopersabbir/juan_don82-server/internal/pkg/config"
-	cf "github.com/devlopersabbir/juan_don82-server/internal/pkg/config"
 	"github.com/devlopersabbir/juan_don82-server/internal/pkg/utils"
 	v "github.com/devlopersabbir/juan_don82-server/internal/pkg/validator"
 	"github.com/gin-gonic/gin"
@@ -149,15 +148,14 @@ func RefreshUserToken(c *gin.Context) {
 		res.ValidationError("Validation failed", errs)
 		return
 	}
-
-	refreshSecret := cf.GetEnv("JWT_REFRESH_SECRET", "2348ffhhjdsghjvxbvmnb23424728rfhsjfkasjfklasj")
-	claims, err := utils.VerifyToken(body.RefreshToken, refreshSecret)
+	env, _ := config.LoadEnv()
+	claims, err := utils.VerifyToken(body.RefreshToken, env.JWTConfig.RefreshSecret)
 	if err != nil {
 		res.UnauthorizedError("Invalid refresh token", err)
 		return
 	}
 
-	accessToken, refreshToken, err := utils.GenerateTokens(claims.UserID, claims.Email, claims.Role, cf.GetEnv("JWT_SECRET", "supersfsdfasfsecretkey"), cf.GetEnv("JWT_REFRESH_SECRET", "2348ffhhjdsghjvxbvmnb23424728rfhsjfkasjfklasj"))
+	accessToken, refreshToken, err := utils.GenerateTokens(claims.UserID, claims.Email, claims.Role, env.JWTConfig.Secret, env.JWTConfig.RefreshSecret)
 	if err != nil {
 		res.InternalServerError("Failed to generate tokens", err)
 		return

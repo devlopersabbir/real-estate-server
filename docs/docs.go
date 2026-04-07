@@ -135,15 +135,18 @@ const docTemplate = `{
                         "description": "List of properties",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     }
                 }
             },
             "post": {
-                "description": "Creates a new property",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new property (Only for AGENT and SYSTEM_ADMIN)",
                 "consumes": [
                     "application/json"
                 ],
@@ -154,14 +157,23 @@ const docTemplate = `{
                     "Properties"
                 ],
                 "summary": "Create a property",
+                "parameters": [
+                    {
+                        "description": "Property Details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_devlopersabbir_juan_don82-server_api_property_domain.PropertyRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Property created successfully",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -179,7 +191,7 @@ const docTemplate = `{
                 "summary": "Get a property",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Property ID",
                         "name": "id",
                         "in": "path",
@@ -191,14 +203,17 @@ const docTemplate = `{
                         "description": "Property details",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     }
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Updates an existing property by its ID",
                 "consumes": [
                     "application/json"
@@ -212,11 +227,20 @@ const docTemplate = `{
                 "summary": "Update a property",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Property ID",
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Property Details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_devlopersabbir_juan_don82-server_api_property_domain.PropertyRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -224,14 +248,17 @@ const docTemplate = `{
                         "description": "Property updated successfully",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Deletes a property by its ID",
                 "tags": [
                     "Properties"
@@ -239,7 +266,7 @@ const docTemplate = `{
                 "summary": "Delete a property",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "Property ID",
                         "name": "id",
                         "in": "path",
@@ -251,9 +278,7 @@ const docTemplate = `{
                         "description": "Property deleted successfully",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -289,6 +314,92 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "github_com_devlopersabbir_juan_don82-server_api_property_domain.PropertyRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "bathrooms",
+                "bedrooms",
+                "city",
+                "country",
+                "description",
+                "images",
+                "name",
+                "price",
+                "property_type",
+                "square_feet",
+                "state",
+                "status",
+                "zip_code"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "bathrooms": {
+                    "type": "integer"
+                },
+                "bedrooms": {
+                    "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount_price": {
+                    "type": "number"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "property_type": {
+                    "type": "string",
+                    "enum": [
+                        "SELL",
+                        "RENT"
+                    ]
+                },
+                "rent_period": {
+                    "type": "string",
+                    "enum": [
+                        "YEARLY",
+                        "MONTHLY"
+                    ]
+                },
+                "square_feet": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "videos": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "zip_code": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_devlopersabbir_juan_don82-server_api_users_domain.AuthResponse": {
             "type": "object",
             "properties": {

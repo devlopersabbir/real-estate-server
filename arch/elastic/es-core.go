@@ -8,6 +8,5 @@ type IndexDefinition struct {
 // ── Register every index from every API module below ─────────────────────────
 var AllIndexes = []IndexDefinition{
 	UsersIndex,
-	// add more here as new API modules are created, e.g.:
-	// propertiesIndex,
+	PropertiesIndex,
 }

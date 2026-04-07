@@ -1,6 +1,7 @@
 package property
 
 import (
+	"github.com/devlopersabbir/juan_don82-server/arch/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,8 +13,14 @@ func RegisterRoutes(v1 *gin.RouterGroup) {
 	{
 		properties.GET("/", GetProperties)
 		properties.GET("/:id", GetProperty)
-		properties.POST("/", CreateProperty)
-		properties.PUT("/:id", UpdateProperty)
-		properties.DELETE("/:id", DeleteProperty)
+
+		// Protected routes
+		protected := properties.Group("")
+		protected.Use(middleware.AuthMiddleware())
+		{
+			protected.POST("/", CreateProperty)
+			protected.PUT("/:id", UpdateProperty)
+			protected.DELETE("/:id", DeleteProperty)
+		}
 	}
 }

@@ -1,5 +1,67 @@
 basePath: /
 definitions:
+  github_com_devlopersabbir_juan_don82-server_api_property_domain.PropertyRequest:
+    properties:
+      address:
+        type: string
+      bathrooms:
+        type: integer
+      bedrooms:
+        type: integer
+      city:
+        type: string
+      country:
+        type: string
+      description:
+        type: string
+      discount_price:
+        type: number
+      images:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+      property_type:
+        enum:
+        - SELL
+        - RENT
+        type: string
+      rent_period:
+        enum:
+        - YEARLY
+        - MONTHLY
+        type: string
+      square_feet:
+        type: integer
+      state:
+        type: string
+      status:
+        type: string
+      videos:
+        items:
+          type: string
+        type: array
+      zip_code:
+        type: string
+    required:
+    - address
+    - bathrooms
+    - bedrooms
+    - city
+    - country
+    - description
+    - images
+    - name
+    - price
+    - property_type
+    - square_feet
+    - state
+    - status
+    - zip_code
+    type: object
   github_com_devlopersabbir_juan_don82-server_api_users_domain.AuthResponse:
     properties:
       access_token:
@@ -127,8 +189,7 @@ paths:
         "200":
           description: List of properties
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
       summary: Get all properties
       tags:
@@ -136,16 +197,24 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new property
+      description: Creates a new property (Only for AGENT and SYSTEM_ADMIN)
+      parameters:
+      - description: Property Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_property_domain.PropertyRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Property created successfully
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: Create a property
       tags:
       - Properties
@@ -157,14 +226,15 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       responses:
         "200":
           description: Property deleted successfully
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: Delete a property
       tags:
       - Properties
@@ -175,15 +245,14 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: Property details
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
       summary: Get a property
       tags:
@@ -197,16 +266,23 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
+      - description: Property Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_property_domain.PropertyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Property updated successfully
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: Update a property
       tags:
       - Properties
