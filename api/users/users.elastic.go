@@ -98,3 +98,30 @@ func ListUsersElastic(ctx context.Context) ([]core.Users, error) {
 
 	return users, nil
 }
+
+func FindByEmail(ctx context.Context, email string) (*core.Users, error) {
+	index := elastic.UsersIndex.Name
+	res, err := database.ESClient.Search().
+		Index(index).
+		Query(&types.Query{
+			Term: map[string]types.TermQuery{
+				"email": {Value: email},
+			},
+		}).
+		Size(1).
+		Do(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search user by email in ES: %w", err)
+	}
+
+	if res.Hits.Total.Value == 0 {
+		return nil, fmt.Errorf("user not found in ES: %s", email)
+	}
+
+	var user core.Users
+	if err := json.Unmarshal(res.Hits.Hits[0].Source_, &user); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal user from ES: %w", err)
+	}
+
+	return &user, nil
+}

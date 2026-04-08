@@ -12,7 +12,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		res := networks.Send(c)
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			res.UnauthorizedError("Authorization header is required", nil)
+			res.NotFoundError("Authorization header is required", nil)
 			return
 		}
 		// fmt.Println("authHeader", authHeader)
@@ -29,7 +29,8 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		claims, err := utils.VerifyToken(tokenString, secret)
 		if err != nil {
-			res.UnauthorizedError("Invalid or expired token", nil)
+			res.UnauthorizedError("Invalid or expired token", err)
+			c.Abort()
 			return
 		}
 
