@@ -1,0 +1,88 @@
+stages:
+  - build_test
+  - build_push_image
+  - deploy
+  - cleanup
+
+variables:
+  DOCKER_IMAGE: "softvence/juan-server"
+  TAG_LATEST: "latest"
+  TAG_COMMIT: "$CI_COMMIT_SHORT_SHA"
+
+# --- Stage 1: Build and Test ---
+build_test:
+  stage: build_test
+  image: golang:1.25.0-alpine
+  script:
+    - apk add --no-cache make build-base
+    - go mod download
+    - echo "Compiling the project..."
+    - go build -o bin/juan-server ./cmd/main.go
+    - echo "Build successful!"
+  only:
+    - main
+    - master
+    - developer
+
+# --- Stage 2: Image Build and Push to Docker Hub ---
+build_push_image:
+  stage: build_push_image
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+  script:
+    - echo "Building Docker image..."
+    - docker build -t $DOCKER_IMAGE:$TAG_COMMIT -t $DOCKER_IMAGE:$TAG_LATEST .
+    - echo "Pushing Docker image to Docker Hub..."
+    - docker push $DOCKER_IMAGE:$TAG_COMMIT
+    - docker push $DOCKER_IMAGE:$TAG_LATEST
+  only:
+    - main
+    - master
+    - developer
+
+# --- Stage 3: Deploy to VPS ---
+deploy_vps:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $VPS_IP >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - echo "Copying docker-compose.yaml to VPS..."
+    - scp docker-compose.yaml $VPS_USERNAME@$VPS_IP:$PROJECT_PATH/docker-compose.yaml
+    - echo "Deploying to VPS..."
+    - ssh $VPS_USERNAME@$VPS_IP "cd $PROJECT_PATH && docker login -u $DOCKER_USER -p $DOCKER_PASSWORD && docker compose pull && docker compose --profile prod up -d"
+    - echo "Deployment complete!"
+  only:
+    - main
+    - master
+    - developer
+
+# --- Stage 4: Cleanup ---
+cleanup:
+  stage: cleanup
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $VPS_IP >> ~/.ssh/known_hosts
+  script:
+    - echo "Cleaning up old images on VPS..."
+    - ssh $VPS_USERNAME@$VPS_IP "docker image prune -af"
+    - echo "Cleanup complete!"
+  only:
+    - main
+    - master
+    - developer
+  when: always
