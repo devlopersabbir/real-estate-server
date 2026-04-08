@@ -16,3 +16,9 @@ func FindByEmail(email string) (*core.Users, error) {
 	}
 	return &user, nil
 }
+
+func FindAllUsers() ([]core.Users, error) {
+	var users []core.Users
+	err := database.DB.Find(&users).Error
+	return users, err
+}

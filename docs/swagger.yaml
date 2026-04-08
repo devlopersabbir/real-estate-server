@@ -1,5 +1,52 @@
 basePath: /
 definitions:
+  github_com_devlopersabbir_juan_don82-server_api_chat_core.ChatRoom:
+    properties:
+      agent_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      property_id:
+        description: Negotiation with reference to property
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  github_com_devlopersabbir_juan_don82-server_api_chat_core.Message:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      room_id:
+        type: integer
+      sender_id:
+        type: integer
+    type: object
+  github_com_devlopersabbir_juan_don82-server_api_chat_domain.CreateRoomRequest:
+    properties:
+      agent_id:
+        type: integer
+      property_id:
+        type: integer
+    required:
+    - agent_id
+    - property_id
+    type: object
+  github_com_devlopersabbir_juan_don82-server_api_chat_domain.SendMessageRequest:
+    properties:
+      content:
+        type: string
+      room_id:
+        type: integer
+    required:
+    - content
+    - room_id
+    type: object
   github_com_devlopersabbir_juan_don82-server_api_property_domain.PropertyRequest:
     properties:
       address:
@@ -62,6 +109,26 @@ definitions:
     - status
     - zip_code
     type: object
+  github_com_devlopersabbir_juan_don82-server_api_subscriptions_core.SubscriptionPlan:
+    properties:
+      duration_days:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+      property_limit:
+        type: integer
+    type: object
+  github_com_devlopersabbir_juan_don82-server_api_subscriptions_domain.PurchaseSubscriptionRequest:
+    properties:
+      plan_id:
+        type: integer
+    required:
+    - plan_id
+    type: object
   github_com_devlopersabbir_juan_don82-server_api_users_domain.AuthResponse:
     properties:
       access_token:
@@ -112,6 +179,54 @@ info:
   title: Juan Don API
   version: "1.0"
 paths:
+  /api/v1/admin/chats:
+    get:
+      description: Admin can fetch all chat rooms
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all chats
+      tags:
+      - Admin
+  /api/v1/admin/properties:
+    get:
+      description: Admin can fetch all properties
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all properties
+      tags:
+      - Admin
+  /api/v1/admin/users:
+    get:
+      description: Admin can fetch all users and agents
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - Admin
   /api/v1/auth/login:
     post:
       consumes:
@@ -180,6 +295,55 @@ paths:
       summary: Register a new user
       tags:
       - Authentication
+  /api/v1/chats/message:
+    post:
+      consumes:
+      - application/json
+      description: Sends a message to a specific chat room
+      parameters:
+      - description: Message Content
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_chat_domain.SendMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_chat_core.Message'
+      security:
+      - BearerAuth: []
+      summary: Send a message
+      tags:
+      - Chat
+  /api/v1/chats/start:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new chat room or returns existing one for a specific
+        property
+      parameters:
+      - description: Chat Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_chat_domain.CreateRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_chat_core.ChatRoom'
+      security:
+      - BearerAuth: []
+      summary: Start a chat with an agent
+      tags:
+      - Chat
   /api/v1/properties:
     get:
       description: Fetches a list of all properties
@@ -286,6 +450,47 @@ paths:
       summary: Update a property
       tags:
       - Properties
+  /api/v1/subscriptions/plans:
+    get:
+      description: Fetches a list of all available subscription plans
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_subscriptions_core.SubscriptionPlan'
+            type: array
+      summary: Get all subscription plans
+      tags:
+      - Subscriptions
+  /api/v1/subscriptions/purchase:
+    post:
+      consumes:
+      - application/json
+      description: Allows an agent to purchase a subscription plan
+      parameters:
+      - description: Purchase Details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_devlopersabbir_juan_don82-server_api_subscriptions_domain.PurchaseSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscription purchased successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Purchase a subscription plan
+      tags:
+      - Subscriptions
   /api/v1/users:
     get:
       description: Fetches a list of all users. Requires authentication.

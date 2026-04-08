@@ -15,6 +15,84 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/admin/chats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Admin can fetch all chat rooms",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get all chats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {}
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/properties": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Admin can fetch all properties",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get all properties",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {}
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Admin can fetch all users and agents",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get all users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {}
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "description": "Authenticates a user and returns access and refresh",
@@ -115,6 +193,84 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/chats/message": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a message to a specific chat room",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Send a message",
+                "parameters": [
+                    {
+                        "description": "Message Content",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_devlopersabbir_juan_don82-server_api_chat_domain.SendMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_devlopersabbir_juan_don82-server_api_chat_core.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/chats/start": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new chat room or returns existing one for a specific property",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Start a chat with an agent",
+                "parameters": [
+                    {
+                        "description": "Chat Details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_devlopersabbir_juan_don82-server_api_chat_domain.CreateRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_devlopersabbir_juan_don82-server_api_chat_core.ChatRoom"
                         }
                     }
                 }
@@ -284,6 +440,71 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/subscriptions/plans": {
+            "get": {
+                "description": "Fetches a list of all available subscription plans",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Subscriptions"
+                ],
+                "summary": "Get all subscription plans",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_devlopersabbir_juan_don82-server_api_subscriptions_core.SubscriptionPlan"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/subscriptions/purchase": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Allows an agent to purchase a subscription plan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Subscriptions"
+                ],
+                "summary": "Purchase a subscription plan",
+                "parameters": [
+                    {
+                        "description": "Purchase Details",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_devlopersabbir_juan_don82-server_api_subscriptions_domain.PurchaseSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Subscription purchased successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "get": {
                 "security": [
@@ -314,6 +535,77 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "github_com_devlopersabbir_juan_don82-server_api_chat_core.ChatRoom": {
+            "type": "object",
+            "properties": {
+                "agent_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "property_id": {
+                    "description": "Negotiation with reference to property",
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_devlopersabbir_juan_don82-server_api_chat_core.Message": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_devlopersabbir_juan_don82-server_api_chat_domain.CreateRoomRequest": {
+            "type": "object",
+            "required": [
+                "agent_id",
+                "property_id"
+            ],
+            "properties": {
+                "agent_id": {
+                    "type": "integer"
+                },
+                "property_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_devlopersabbir_juan_don82-server_api_chat_domain.SendMessageRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "room_id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "github_com_devlopersabbir_juan_don82-server_api_property_domain.PropertyRequest": {
             "type": "object",
             "required": [
@@ -397,6 +689,37 @@ const docTemplate = `{
                 },
                 "zip_code": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_devlopersabbir_juan_don82-server_api_subscriptions_core.SubscriptionPlan": {
+            "type": "object",
+            "properties": {
+                "duration_days": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "property_limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_devlopersabbir_juan_don82-server_api_subscriptions_domain.PurchaseSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "plan_id"
+            ],
+            "properties": {
+                "plan_id": {
+                    "type": "integer"
                 }
             }
         },

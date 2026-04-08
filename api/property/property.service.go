@@ -5,6 +5,7 @@ import (
 
 	"github.com/devlopersabbir/juan_don82-server/api/property/core"
 	"github.com/devlopersabbir/juan_don82-server/api/property/domain"
+	"github.com/devlopersabbir/juan_don82-server/api/subscriptions"
 	"github.com/devlopersabbir/juan_don82-server/arch/networks"
 	v "github.com/devlopersabbir/juan_don82-server/internal/pkg/validator"
 	"github.com/gin-gonic/gin"
@@ -87,7 +88,14 @@ func CreateProperty(c *gin.Context) {
 		res.UnauthorizedError("User ID not found in context", nil)
 		return
 	}
-	userID := uint(userIDVal.(float64)) // JWT standard maps decode numbers to float64, adjust as per verify token
+	userID := userIDVal.(uint)
+	if role == "agent" || role == "AGENT" {
+		_, err := subscriptions.FindActiveSubscription(userID)
+		if err != nil {
+			res.ForbiddenError("Active subscription required to list properties", err)
+			return
+		}
+	}
 
 	var body domain.PropertyRequest
 	if err := c.ShouldBindJSON(&body); err != nil {
