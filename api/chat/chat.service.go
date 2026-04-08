@@ -56,6 +56,12 @@ func StartChat(c *gin.Context) {
 		return
 	}
 
+	// Sync to Elastic
+	if err := StoreRoomElastic(c, newRoom); err != nil {
+		res.InternalServerError("Failed to sync chat room to search index", err)
+		return
+	}
+
 	res.SuccessDataResponse("Chat room created", newRoom)
 }
 
@@ -98,18 +104,27 @@ func SendMsg(c *gin.Context) {
 		return
 	}
 
+	// Sync to Elastic
+	if err := StoreMessageElastic(c, msg); err != nil {
+		res.InternalServerError("Failed to sync message to search index", err)
+		return
+	}
+
 	res.SuccessDataResponse("Message sent", msg)
 }
 
 // GetRooms fetches all chat rooms for the logged-in user
 func GetRooms(c *gin.Context) {
 	userID, _ := c.Get("userID")
-	rooms, err := GetRoomsByUser(userID.(uint))
-	if err != nil {
-		networks.Send(c).InternalServerError("Failed to fetch rooms", err)
-		return
+	rooms, err := ListRoomsElastic(c, userID.(uint))
+	if err != nil || len(rooms) == 0 {
+		rooms, err = GetRoomsByUser(userID.(uint))
+		if err != nil {
+			networks.Send(c).InternalServerError("Failed to fetch rooms", err)
+			return
+		}
 	}
-	networks.Send(c).SuccessDataResponse("Rooms fetched", rooms)
+	networks.Send(c).SuccessDataResponse("Rooms fetched from search index", rooms)
 }
 
 // GetRoomMessages fetches all messages for a room
@@ -121,10 +136,13 @@ func GetRoomMessages(c *gin.Context) {
 		return
 	}
 
-	msgs, err := GetMessagesByRoom(uint(roomID))
-	if err != nil {
-		networks.Send(c).InternalServerError("Failed to fetch messages", err)
-		return
+	msgs, err := ListMessagesElastic(c, uint(roomID))
+	if err != nil || len(msgs) == 0 {
+		msgs, err = GetMessagesByRoom(uint(roomID))
+		if err != nil {
+			networks.Send(c).InternalServerError("Failed to fetch messages", err)
+			return
+		}
 	}
-	networks.Send(c).SuccessDataResponse("Messages fetched", msgs)
+	networks.Send(c).SuccessDataResponse("Messages fetched from search index", msgs)
 }

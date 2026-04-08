@@ -121,8 +121,12 @@ func LoginUser(c *gin.Context) {
 //	@Success		200	{object}	map[string]string	"Users fetched successfully"
 //	@Router			/api/v1/users [get]
 func GetUsers(c *gin.Context) {
-	// We can implement fetching all users if needed
-	networks.Send(c).SuccessMsgResponse("Users fetched successfully")
+	users, err := ListUsersElastic(c)
+	if err != nil {
+		networks.Send(c).InternalServerError("Failed to fetch users from search index", err)
+		return
+	}
+	networks.Send(c).SuccessDataResponse("Users fetched successfully from base search index", users)
 }
 
 // RefreshUserToken refreshes the access token

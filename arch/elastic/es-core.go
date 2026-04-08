@@ -9,4 +9,9 @@ type IndexDefinition struct {
 var AllIndexes = []IndexDefinition{
 	UsersIndex,
 	PropertiesIndex,
+	SubscriptionsIndex,
+	PlansIndex,
+	ChatRoomsIndex,
+	MessagesIndex,
+	WishlistIndex,
 }

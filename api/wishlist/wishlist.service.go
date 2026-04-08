@@ -1,9 +1,12 @@
 package wishlist
 
 import (
+	"strconv"
+
 	"github.com/devlopersabbir/juan_don82-server/api/wishlist/core"
 	"github.com/devlopersabbir/juan_don82-server/api/wishlist/domain"
 	"github.com/devlopersabbir/juan_don82-server/arch/networks"
+	"github.com/devlopersabbir/juan_don82-server/internal/database"
 	v "github.com/devlopersabbir/juan_don82-server/internal/pkg/validator"
 	"github.com/gin-gonic/gin"
 )
@@ -35,6 +38,12 @@ func Add(c *gin.Context) {
 		return
 	}
 
+	// Sync to Elastic
+	if err := StoreElastic(c, item); err != nil {
+		res.InternalServerError("Failed to sync wishlist to search index", err)
+		return
+	}
+
 	res.SuccessMsgResponse("Added to wishlist")
 }
 
@@ -48,11 +57,16 @@ func Remove(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("userID")
+	userIDVal, _ := c.Get("userID")
 
-	if err := RemoveFromWishlist(userID.(uint), body.PropertyID); err != nil {
-		res.InternalServerError("Failed to remove from wishlist", err)
-		return
+	var item core.Wishlist
+	if err := database.DB.Where("user_id = ? AND property_id = ?", userIDVal.(uint), body.PropertyID).First(&item).Error; err == nil {
+		if err := RemoveFromWishlist(userIDVal.(uint), body.PropertyID); err != nil {
+			res.InternalServerError("Failed to remove from wishlist", err)
+			return
+		}
+		// Sync to Elastic
+		DeleteElastic(c, strconv.Itoa(int(item.ID)))
 	}
 
 	res.SuccessMsgResponse("Removed from wishlist")

@@ -10,6 +10,7 @@ import (
 	"github.com/devlopersabbir/juan_don82-server/api/users/core"
 	"github.com/devlopersabbir/juan_don82-server/arch/elastic"
 	"github.com/devlopersabbir/juan_don82-server/internal/database"
+	"github.com/elastic/go-elasticsearch/v9/typedapi/types"
 )
 
 func StoreElastic(ctx context.Context, user *core.Users) error {
@@ -71,4 +72,29 @@ func DeleteElastic(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+func ListUsersElastic(ctx context.Context) ([]core.Users, error) {
+	index := elastic.UsersIndex.Name
+	res, err := database.ESClient.Search().
+		Index(index).
+		Query(&types.Query{MatchAll: &types.MatchAllQuery{}}).
+		Size(100).
+		Do(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to search users in ES: %w", err)
+	}
+
+	users := make([]core.Users, 0)
+	for _, hit := range res.Hits.Hits {
+		var u core.Users
+		if err := json.Unmarshal(hit.Source_, &u); err != nil {
+			log.Printf("Error unmarshaling user hit: %v", err)
+			continue
+		}
+		users = append(users, u)
+	}
+
+	return users, nil
 }

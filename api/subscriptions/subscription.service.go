@@ -19,12 +19,16 @@ import (
 //	@Success		200	{array}	core.SubscriptionPlan
 //	@Router			/api/v1/subscriptions/plans [get]
 func GetAllPlans(c *gin.Context) {
-	plans, err := GetPlans()
-	if err != nil {
-		networks.Send(c).InternalServerError("Failed to fetch plans", err)
-		return
+	plans, err := ListPlansElastic(c)
+	if err != nil || len(plans) == 0 {
+		// Fallback to DB if ES is empty or errors
+		plans, err = GetPlans()
+		if err != nil {
+			networks.Send(c).InternalServerError("Failed to fetch plans", err)
+			return
+		}
 	}
-	networks.Send(c).SuccessDataResponse("Plans fetched successfully", plans)
+	networks.Send(c).SuccessDataResponse("Plans fetched successfully from search index", plans)
 }
 
 // PurchaseSubscription handles subscription purchase for agents
@@ -79,6 +83,12 @@ func PurchaseSubscription(c *gin.Context) {
 		return
 	}
 
+	// Sync to Elastic
+	if err := StoreElastic(c, sub); err != nil {
+		res.InternalServerError("Failed to sync subscription to search index", err)
+		return
+	}
+
 	res.SuccessMsgResponse("Subscription purchased successfully")
 }
 
@@ -106,6 +116,12 @@ func AddPlan(c *gin.Context) {
 
 	if err := CreatePlan(plan); err != nil {
 		res.InternalServerError("Failed to create plan", err)
+		return
+	}
+
+	// Sync to Elastic
+	if err := StorePlanElastic(c, plan); err != nil {
+		res.InternalServerError("Failed to sync plan to search index", err)
 		return
 	}
 
