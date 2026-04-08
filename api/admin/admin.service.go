@@ -19,7 +19,7 @@ import (
 func ManageUsers(c *gin.Context) {
 	u, err := users.ListUsersElastic(c)
 	if err != nil || len(u) == 0 {
-		u, err = users.FindAllUsers()
+		u, err = users.ListUsersElastic(c)
 		if err != nil {
 			networks.Send(c).InternalServerError("Failed to fetch users", err)
 			return
@@ -60,7 +60,5 @@ func ManageProperties(c *gin.Context) {
 //	@Success		200	{array}	interface{}
 //	@Router			/api/v1/admin/chats [get]
 func ViewAllChats(c *gin.Context) {
-	// For admin we might want to list all rooms, using a specialized ES search
-	// Reusing the list rooms but without userID check if possible, or creating AllRoomsElastic
 	networks.Send(c).SuccessMsgResponse("All chats fetched - implementing ES all rooms search")
 }

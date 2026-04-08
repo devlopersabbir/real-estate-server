@@ -87,7 +87,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	user, err := FindByEmail(body.Email)
+	user, err := FindByEmail(c, body.Email)
 	if err != nil || user.Email == "" {
 		res.UnauthorizedError("Invalid credentials", err)
 		return

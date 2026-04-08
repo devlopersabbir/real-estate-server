@@ -95,6 +95,7 @@ func (s *sendResponse) handleError(code int, message string, err error) {
 	}
 
 	s.ctx.JSON(code, resp)
+	s.ctx.Abort()
 }
 
 func (s *sendResponse) BadRequestError(message string, err error) {
@@ -109,6 +110,7 @@ func (s *sendResponse) ValidationError(message string, errs any) {
 		Timestamp: time.Now().Unix(),
 		Errors:    errs,
 	})
+	s.ctx.Abort()
 }
 
 func (s *sendResponse) ForbiddenError(message string, err error) {
