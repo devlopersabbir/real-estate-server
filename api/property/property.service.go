@@ -1,6 +1,7 @@
 package property
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/devlopersabbir/juan_don82-server/api/property/core"
@@ -78,6 +79,7 @@ func CreateProperty(c *gin.Context) {
 	res := networks.Send(c)
 
 	role, exists := c.Get("role")
+	fmt.Println(role)
 	if !exists || role == "user" || role == "USER" {
 		res.UnauthorizedError("You are not authorized to create properties", nil)
 		return
